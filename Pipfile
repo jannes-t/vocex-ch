@@ -5,16 +5,13 @@ name = "pypi"
 
 [packages]
 epub-conversion = "*"
-nltk = "*"
 jieba = "*"
 regex = "*"
 "pyqt5" = "*"
 pyinstaller = "*"
-fulltext = "*"
 click = "*"
-dmgbuild = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.6"
+python_version = "3.7"
