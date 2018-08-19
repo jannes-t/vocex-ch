@@ -31,7 +31,7 @@ def extract(infile, outfile, skritter, split):
     text_vocab = f.extract_vocab(text)
     if user_vocab is not None:
         text_vocab = text_vocab.difference(user_vocab)
-    f.write_vocab_to_file(text_vocab, outfile)
+    f.write_vocab_to_file(text_vocab, outfile, split)
 
 
 if __name__ == '__main__':

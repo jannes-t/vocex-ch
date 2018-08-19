@@ -1,0 +1,12 @@
+Setup python and pipenv:
+1. using pyenv: install python with: PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 3.6.5
+2. tell pipenv to use pyenv installed python: pipenv --python /Users/jannes/.pyenv/versions/3.6.5/bin/python 
+
+Building with pyinstaller and Mac specific build:
+1. need to add --hidden-import PyQt5.sip to pyinstaller command when building qtmain (see make.sh)
+2. need to add 
+info_plist={
+        'NSHighResolutionCapable': 'True'
+        }
+in App section of .spec file to get high resolution (cp ready Info.plist file)
+

@@ -1,7 +1,9 @@
 import regex
+import os
 import re
 import epub_conversion
 import jieba
+import sys
 
 def source_to_txt(filename):
     """ convert .txt or .epub to one string """
@@ -28,7 +30,13 @@ def epub_to_txt(filename):
 
 def extract_vocab(text):
     """ convert string of text to set of chinese vocab """
-    jieba.load_userdict('resources/simpl-dict.txt')
+    # load user dict - determine correct path for resources
+    base_path = get_base_path_resources()
+    print(base_path)
+    dictpath = os.path.join(base_path, 'resources/simpl-dict.txt')
+    print(os.path.isfile(dictpath))
+
+    jieba.load_userdict(dictpath)
     seg_list = jieba.cut(text, cut_all=False)
     vocab = list()
     for word in seg_list:
@@ -56,9 +64,50 @@ def read_skritter_vocab(filename):
     lines = f.readlines()
     return extract_user_vocab(lines)
 
-def write_vocab_to_file(vocab, filename):
-    f = open(filename, 'wt')
+def write_vocab_to_file(vocab, filename, split = False):
+    stripped = filename_strip_txt_ext(filename)
+    if split:
+        write_vocab_to_file_split(vocab, stripped)
+    else:
+        write_vocab_to_file_single(vocab, stripped)
+
+def write_vocab_to_file_single(vocab, filename):
+    f = open('{}.txt'.format(filename), 'wt')
     with f:
         for word in vocab:
-            f.write(word+'\n')
+            f.write('{}\n'.format(word))
         f.close()
+
+def write_vocab_to_file_split(vocab, filename):
+    set_of_sets = set()
+    counter = 0
+    subset = set()
+    for word in vocab:
+        subset.add(word)
+        counter += 1
+        if counter == 200:
+            set_of_sets.add(frozenset(subset))
+            subset.clear()
+            counter = 0
+    for i, s in enumerate(set_of_sets):
+        write_vocab_to_file(s, '{}{}'.format(filename, i))
+
+def get_base_path_resources():
+    """ get base path of folder containing resources """
+    # if bundled as folder or onefile with pyinstaller
+    base_path = None
+    if getattr( sys, 'frozen', False ) :
+        # running in a bundle
+        base_path = sys._MEIPASS
+    else :
+        # running live
+        base_path = os.path.abspath(os.path.dirname(__file__))
+    return base_path
+
+# def filename_without_extension(filename):
+#     return os.path.splittext(filename)[0]
+
+def filename_strip_txt_ext(filename):
+    pattern = re.compile(r'\.txt$', re.IGNORECASE)
+    return re.sub(pattern, '', filename)
+

@@ -79,7 +79,10 @@ class Main(QMainWindow):
                 return
 
         # movie = QMovie('resources/load.gif')
-        movie = QMovie("load.gif")
+        # print(os.path.isfile('resources/load.gif'))
+        load_res = os.path.join(fn.get_base_path_resources(),
+        'resources/load.gif')
+        movie = QMovie(load_res)
         loading = self.ui.loadingLabel
         status = self.ui.statusLabel
         loading.setMovie(movie)
@@ -99,11 +102,11 @@ class Main(QMainWindow):
         vocab = fn.extract_vocab(text)
         if (user_vocab is not None):
             vocab = vocab.difference(user_vocab)
-        f = open(name, 'wt')
-        with f:
-            for word in vocab:
-                f.write(word+'\n')
-            f.close()
+
+        # determine whether user wants to split output
+        writeChunks = self.ui.chunksCheckBox.isChecked()
+        fn.write_vocab_to_file(vocab, name, writeChunks)
+
         movie.stop()
         loading.hide()
         status.setText('Done. Amount of words: ' + str(len(vocab)))

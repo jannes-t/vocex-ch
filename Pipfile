@@ -8,10 +8,10 @@ epub-conversion = "*"
 jieba = "*"
 regex = "*"
 "pyqt5" = "*"
-pyinstaller = "*"
 click = "*"
+pyinstaller = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.7"
+python_version = "3.6"
