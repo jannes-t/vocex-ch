@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
 from PyQt5.QtWidgets import QErrorMessage, QLabel
 from PyQt5.QtGui import QMovie
 from mainwindow import Ui_MainWindow
+import concurrent.futures as futures
 
 class Main(QMainWindow):
     def __init__(self):
@@ -64,6 +65,7 @@ class Main(QMainWindow):
         else:
             return None
 
+
     def extract(self):
         text = self.input_file_to_text()
         user_vocab = None
@@ -86,11 +88,15 @@ class Main(QMainWindow):
         loading = self.ui.loadingLabel
         status = self.ui.statusLabel
         loading.setMovie(movie)
+        loading.inherits
         loading.setScaledContents(True)
         movie.start()
         loading.show()
         status.setText('extracting')
         status.show()
+
+        # determine whether user wants to split output
+        writeChunks = self.ui.chunksCheckBox.isChecked()
 
         name, _ = QFileDialog.getSaveFileName(None, 'save as')
         if (name == ''):
@@ -99,17 +105,31 @@ class Main(QMainWindow):
             status.setText('')
             return
 
-        vocab = fn.extract_vocab(text)
-        if (user_vocab is not None):
-            vocab = vocab.difference(user_vocab)
+        def extract_worker(text, user_vocab, filename, writeChunks):
+            vocab = fn.extract_vocab(text)
+            if (user_vocab is not None):
+                vocab = vocab.difference(user_vocab)
 
-        # determine whether user wants to split output
-        writeChunks = self.ui.chunksCheckBox.isChecked()
-        fn.write_vocab_to_file(vocab, name, writeChunks)
+            fn.write_vocab_to_file(vocab, filename, writeChunks)
+            return len(user_vocab)
 
-        movie.stop()
-        loading.hide()
-        status.setText('Done. Amount of words: ' + str(len(vocab)))
+        with futures.ThreadPoolExecutor(max_workers=1) as executor:
+            vocab_future = executor.submit(extract_worker, text, user_vocab,
+                    name, writeChunks)
+            vocab_future.add_done_callback(self.done_extracting)
+
+        print('return from extract function')
+
+        # movie.stop()
+        # loading.hide()
+        # status.setText('Done. Amount of words: ' + str(len(vocab)))
+
+    def done_extracting(self, vocab_future):
+        amount_words = vocab_future.result();
+        self.ui.loadingLabel.clear()
+        self.ui.loadingLabel.hide()
+        self.ui.statusLabel.setText('Done. Amount of words: {}',
+            format(amount_words))
 
 
 app = QApplication(sys.argv)
