@@ -10,3 +10,6 @@ info_plist={
         }
 in App section of .spec file to get high resolution (cp ready Info.plist file)
 
+Build windows:
+1. extra dependency on pypiwin32 (install with pip)
+
