@@ -6,14 +6,17 @@ from PyQt5.QtWidgets import QErrorMessage, QLabel
 from PyQt5.QtGui import QMovie
 from mainwindow import Ui_MainWindow
 import concurrent.futures as futures
+import logging
 
 class Main(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.in_filepath = None
-        self.vocab_filepath = None
-        self.out_filepath = None
+        # self.in_filepath = None
+        # self.vocab_filepath = None
+        # self.out_filepath = None
+        logging.basicConfig(level=logging.INFO)
         self.ui = None
+        self.ppool = futures.ProcessPoolExecutor(max_workers=1)
         self.initUI()
 
     def initUI(self):
@@ -65,7 +68,6 @@ class Main(QMainWindow):
         else:
             return None
 
-
     def extract(self):
         text = self.input_file_to_text()
         user_vocab = None
@@ -80,10 +82,42 @@ class Main(QMainWindow):
                 error.showMessage('Please specify valid User Vocabulary file')
                 return
 
-        # movie = QMovie('resources/load.gif')
-        # print(os.path.isfile('resources/load.gif'))
+        pair = self.before_extract()
+        if pair is None:
+            return
+        filename = pair[0]
+        write_chunks = pair[1]
+
+        # with futures.ProcessPoolExecutor(1) as executor:
+        #     vocab_future = executor.submit(extract_worker, text, user_vocab,
+        #             filename, write_chunks)
+        #     vocab_future.add_done_callback(self.after_extract)
+        vocab_future = self.ppool.submit(extract_worker, text, user_vocab,
+                filename, write_chunks)
+        vocab_future.add_done_callback(self.after_extract)
+
+        logging.debug('returning from extract')
+
+        # movie.stop()
+        # loading.hide()
+        # status.setText('Done. Amount of words: ' + str(len(vocab)))
+
+    def before_extract(self):
+        write_chunks = self.ui.chunksCheckBox.isChecked()
+        filename, _ = QFileDialog.getSaveFileName(None, 'save as')
+        if (filename == ''):
+            error = QErrorMessage(self)
+            error.showMessage('Please specify valid source file')
+            return None
+
+        # disable ui
+        self.ui.chooseFileButton.setEnabled(False)
+        self.ui.chooseFileButton_2.setEnabled(False)
+        self.ui.extractButton.setEnabled(False)
+
+        # enable extract animation
         load_res = os.path.join(fn.get_base_path_resources(),
-        'resources/load.gif')
+                  'resources/load.gif')
         movie = QMovie(load_res)
         loading = self.ui.loadingLabel
         status = self.ui.statusLabel
@@ -95,44 +129,38 @@ class Main(QMainWindow):
         status.setText('extracting')
         status.show()
 
-        # determine whether user wants to split output
-        writeChunks = self.ui.chunksCheckBox.isChecked()
+        logging.debug('returning from before_extract')
+        return (filename, write_chunks)
 
-        name, _ = QFileDialog.getSaveFileName(None, 'save as')
-        if (name == ''):
-            movie.stop()
-            loading.hide()
-            status.setText('')
-            return
 
-        def extract_worker(text, user_vocab, filename, writeChunks):
-            vocab = fn.extract_vocab(text)
-            if (user_vocab is not None):
-                vocab = vocab.difference(user_vocab)
-
-            fn.write_vocab_to_file(vocab, filename, writeChunks)
-            return len(user_vocab)
-
-        with futures.ThreadPoolExecutor(max_workers=1) as executor:
-            vocab_future = executor.submit(extract_worker, text, user_vocab,
-                    name, writeChunks)
-            vocab_future.add_done_callback(self.done_extracting)
-
-        print('return from extract function')
-
-        # movie.stop()
-        # loading.hide()
-        # status.setText('Done. Amount of words: ' + str(len(vocab)))
-
-    def done_extracting(self, vocab_future):
+    def after_extract(self, vocab_future):
         amount_words = vocab_future.result();
         self.ui.loadingLabel.clear()
         self.ui.loadingLabel.hide()
-        self.ui.statusLabel.setText('Done. Amount of words: {}',
-            format(amount_words))
+        self.ui.statusLabel.setText('Done. Amount of words: {}'
+                .format(amount_words))
+        # re-enable ui
+        self.ui.chooseFileButton.setEnabled(True)
+        self.ui.chooseFileButton_2.setEnabled(True)
+        self.ui.extractButton.setEnabled(True)
+        logging.debug('returning from after_extract')
 
 
-app = QApplication(sys.argv)
-main = Main()
-sys.exit(app.exec_())
+def extract_worker(text, user_vocab, filename, writeChunks):
+    vocab = fn.extract_vocab(text)
+    if (user_vocab is not None):
+        vocab = vocab.difference(user_vocab)
 
+    fn.write_vocab_to_file(vocab, filename, writeChunks)
+    return len(vocab)
+
+
+def start():
+    app = QApplication(sys.argv)
+    main = Main()
+    main.show()
+    sys.exit(app.exec_())
+
+
+if __name__ == '__main__':
+    start()

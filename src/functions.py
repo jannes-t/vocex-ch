@@ -4,6 +4,7 @@ import re
 import epub_conversion
 import jieba
 import sys
+import logging
 
 def source_to_txt(filename):
     """ convert .txt or .epub to one string """
@@ -32,11 +33,13 @@ def extract_vocab(text):
     """ convert string of text to set of chinese vocab """
     # load user dict - determine correct path for resources
     base_path = get_base_path_resources()
-    print(base_path)
+    logging.debug('Base path of resource folder: {}'.format(base_path))
     dictpath = os.path.join(base_path, 'resources/simpl-dict.txt')
-    print(os.path.isfile(dictpath))
+    logging.debug('Is path to dictionary correct: {}'
+            .format(os.path.isfile(dictpath)))
 
     jieba.load_userdict(dictpath)
+
     seg_list = jieba.cut(text, cut_all=False)
     vocab = list()
     for word in seg_list:
