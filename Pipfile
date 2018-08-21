@@ -10,6 +10,7 @@ regex = "*"
 "pyqt5" = "*"
 click = "*"
 pyinstaller = "*"
+"pypiwin32" = "*"
 
 [dev-packages]
 
