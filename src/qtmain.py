@@ -14,7 +14,7 @@ class Main(QMainWindow):
         # self.in_filepath = None
         # self.vocab_filepath = None
         # self.out_filepath = None
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(level=logging.DEBUG)
         self.ui = None
         self.ppool = futures.ProcessPoolExecutor(max_workers=1)
         self.initUI()
@@ -147,11 +147,13 @@ class Main(QMainWindow):
 
 
 def extract_worker(text, user_vocab, filename, writeChunks):
+    logging.debug('start running extract_worker')
     vocab = fn.extract_vocab(text)
     if (user_vocab is not None):
         vocab = vocab.difference(user_vocab)
 
     fn.write_vocab_to_file(vocab, filename, writeChunks)
+    logging.debug('returning from extract_worker')
     return len(vocab)
 
 
