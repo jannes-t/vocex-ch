@@ -13,3 +13,6 @@ in App section of .spec file to get high resolution (cp ready Info.plist file)
 Build windows:
 1. extra dependency on pypiwin32 (install with pip)
 
+general build and jieba:
+-jieba inits and looks for jieba/dict.txt,
+so jieba/dict.txt has to be added as extra data to pyinstaller command

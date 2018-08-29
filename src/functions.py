@@ -37,8 +37,10 @@ def extract_vocab(text):
     dictpath = os.path.join(base_path, 'resources/simpl-dict.txt')
     logging.debug('Is path to dictionary correct: {}'
             .format(os.path.isfile(dictpath)))
+    logging.debug('Current wd: {}'.format(os.getcwd()))
 
     jieba.load_userdict(dictpath)
+    # jieba.initialize('resources/simpl-dict.txt')
 
     seg_list = jieba.cut(text, cut_all=False)
     vocab = list()
