@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QErrorMessage, QLabel
 from PyQt5.QtGui import QMovie
 from mainwindow import Ui_MainWindow
 import concurrent.futures as futures
+import multiprocessing
 import logging
 
 class Main(QMainWindow):
@@ -165,4 +166,5 @@ def start():
 
 
 if __name__ == '__main__':
+    multiprocessing.freeze_support()
     start()
