@@ -8,5 +8,4 @@ This is achieved by checking against a list of known words and characters (expor
 ## Usage
 You can either download a packaged GUI (only provided for Windows and Mac OS) or build an executable script/gui yourself.
 
-## Build Instructions
-coming soon
+use www.jihanzi.com instead
